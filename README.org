@@ -1,0 +1,13 @@
+# jupyter2org
+Convert Jupyter Notebooks to Org
+
+This is a python script to convert Jupyter notebooks to Org format.
+Run as follows:
+
+#+begin_example
+jupyter2org.py Week_4.ipynb > Week_4.org
+#+end_example
+
+It presently exports Jupyter code cells as ob-python org babel blocks
+(see https://github.com/gregsexton/ob-ipython) and handles minimal
+markdown to org conversion of text blocks.

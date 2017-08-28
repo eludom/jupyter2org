@@ -2,7 +2,7 @@
 """
 * jupyter2org.py - Convert Jupyter Notebooks to Org Mode
 
-  Usage: jypyter2org.py [options] FILE.ipynb FILE.org
+  Usage: jypyter2org.py [options] FILE.ipynb > FILE.org
 
   Input files:
         - notebook-file -  ipynb file
@@ -73,6 +73,13 @@ def md_2_org(md_text):
         if (replaced > 0):
             line =  "*"*replaced + line[replaced:]
 
+        # relplace markdown definitions
+
+        replaced = len(line) - len(line.lstrip("#"))
+        if (replaced > 0):
+            line =  "*"*replaced + line[replaced:]
+
+
         org_text += line + "\n"
 
     return org_text
@@ -93,47 +100,53 @@ def process_markdown_cell(cell):
         # Currently ignoring anything but source in the markdown cell
 
 
-def print_ob_ipyton_preamble():
+def print_ob_ipyton_preamble(base):
         """
 *** print_ob_ipython_preamble - spit out preamble, includes for ob ipython
         """
 
         print """
-#+BEGIN_SRC ipython :session week3
-  %matplotlib inline
+#+BEGIN_SRC ipython :session %s
+  %%matplotlib inline
   import matplotlib.pyplot as plt
   import numpy as np
 #+END_SRC
-"""
+""" % (base)
 
 
-def process_code_cell(cell, base):
+def process_code_cell(cell, base, png_fileno):
         """
 *** process_markdown_cell - do something useful with jupyter markdown
         """
 
+        if opts.png:
+                file_option = ":file %d.png" % (png_fileno)
+        else:
+                file_option = ""
+
         print """
-#+begin_src ipython :session %s
+#+begin_src ipython :session %s  :exports both %s
 %s
 #+end_src
-"""  % (base, "".join(cell["source"]).encode('utf-8').strip())
+"""  % (base, file_option, "".join(cell["source"]).encode('utf-8').strip())
 
         # Currently ignoring anything but source in the markdown cell
         # may want to inclclude output as #+RESULT: or #+begin_example
 
 
-
 def jupyter_file_2_org(filename):
         """
-** jupyter_file_2_org(filename) - convert jupyter json to org
+a** jupyter_file_2_org(filename) - convert jupyter json to org
         """
         debug("in jupyter_file_2_org")
         debug(filename)
 
-        base=os.path.basename(os.path.splitext('/home/user/somefile.txt')[0])
+        png_file_number = 1
+
+        base=os.path.basename(os.path.splitext(filename)[0])
         debug("base is" + base)
 
-        print_ob_ipyton_preamble()
+        print_ob_ipyton_preamble(base)
 
         nb_json = json.load(open(filename))
 
@@ -141,7 +154,8 @@ def jupyter_file_2_org(filename):
                 if cell["cell_type"] == "markdown":
                         process_markdown_cell(cell)
                 elif cell["cell_type"] == "code":
-                        process_code_cell(cell, base)
+                        process_code_cell(cell, base, png_file_number)
+                        png_file_number += 1
                 else:
                         warn("Unhandled cell type: %s" % (cell["cell_type"]))
                         warn("cell: /%s/" % (json.dumps(cell, indent=2)))
@@ -161,6 +175,8 @@ Does foo...
                                           help='debug output')
         parser.add_option('-v', '--verbose', action='store_true',
                                           help='verbose output')
+        parser.add_option('-p', '--png', action='store_true',
+                                          help='code blocks export numbered png files')
 
         opts, args = parser.parse_args(argv)
 
@@ -182,5 +198,9 @@ if __name__ == '__main__':
         global opts, args
 
         opts, args = parse_args(sys.argv)
+
+
+
+
 
         main()
