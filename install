@@ -1,0 +1,20 @@
+#! /bin/bash
+# mkdir ~/bin and link jupyter2org to ~/bin/jupyter2org
+#
+# Usage:
+#   install [options]
+#
+# options from link2home.sh. Default
+#
+#  --remove --debug --verbose
+#
+
+# Any files listed (one per line) in .install.ignore will be ignored
+
+
+# get the directory of this script
+WHERE_AM_I="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+mkdir -p ~/bin
+cd ~/bin
+ln -s ${WHERE_AM_I}/jupyter2org .
